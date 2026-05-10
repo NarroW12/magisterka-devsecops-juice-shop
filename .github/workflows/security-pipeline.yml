@@ -15,7 +15,6 @@ permissions:
 
 env:
   FLASK_APP_DIR: apps/flask-app
-  TRIVY_VERSION: "0.28.0"
 
 jobs:
   # ============================================================
@@ -84,7 +83,7 @@ jobs:
           java-version: "17"
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: fs
           scan-ref: ${{ env.FLASK_APP_DIR }}
@@ -158,7 +157,7 @@ jobs:
         run: docker build -t flask-app:ci ${{ env.FLASK_APP_DIR }}
 
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: flask-app:ci
           format: sarif
