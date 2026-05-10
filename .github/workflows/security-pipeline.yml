@@ -1,0 +1,259 @@
+name: Security Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+
+env:
+  FLASK_APP_DIR: apps/flask-app
+  TRIVY_VERSION: "0.28.0"
+
+jobs:
+  # ============================================================
+  # ETAP 1 — Skanowanie sekretów (Gitleaks)
+  # ============================================================
+  secrets-scan:
+    name: "Etap 1 — Skanowanie sekretów (Gitleaks)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: ${{ github.workspace }}/configs/.gitleaks.toml
+
+  # ============================================================
+  # ETAP 2 — Statyczna analiza kodu (CodeQL)
+  # ============================================================
+  sast:
+    name: "Etap 2 — SAST (CodeQL)"
+    needs: secrets-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Flask app dependencies
+        run: pip install -r ${{ env.FLASK_APP_DIR }}/requirements.txt
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          config-file: ./configs/codeql-config.yml
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"
+
+  # ============================================================
+  # ETAP 3 — Analiza składu oprogramowania (Trivy + Dep-Check)
+  # ============================================================
+  sca:
+    name: "Etap 3 — SCA (Trivy + Dependency-Check)"
+    needs: sast
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java for Dependency-Check
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: ${{ env.FLASK_APP_DIR }}
+          format: sarif
+          output: trivy-fs.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Upload Trivy filesystem SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: flask-app
+          path: ${{ env.FLASK_APP_DIR }}
+          format: SARIF
+          out: dc-reports
+          args: >-
+            --enableExperimental
+            --failOnCVSS 7
+
+      - name: Upload Dependency-Check SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: dc-reports/dependency-check-report.sarif
+          category: dependency-check
+
+      - name: Archive raw Dependency-Check reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-reports
+          path: dc-reports/
+          retention-days: 14
+
+  # ============================================================
+  # ETAP 4 — Build obrazu + skanowanie IaC (Hadolint + Checkov + Trivy)
+  # ============================================================
+  build-and-iac:
+    name: "Etap 4 — Build + IaC (Hadolint + Checkov + Trivy image)"
+    needs: sca
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Hadolint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ${{ env.FLASK_APP_DIR }}/Dockerfile
+          config: configs/.hadolint.yaml
+          format: sarif
+          output-file: hadolint.sarif
+          no-fail: false
+
+      - name: Upload Hadolint SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: hadolint.sarif
+          category: hadolint
+
+      - name: Build Docker image
+        run: docker build -t flask-app:ci ${{ env.FLASK_APP_DIR }}
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: flask-app:ci
+          format: sarif
+          output: trivy-image.sarif
+          severity: CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Upload Trivy image SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+      - name: Checkov scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: ${{ env.FLASK_APP_DIR }}
+          framework: dockerfile
+          output_format: cli,sarif
+          output_file_path: console,checkov-results.sarif
+          soft_fail: false
+
+      - name: Upload Checkov SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
+          category: checkov
+
+  # ============================================================
+  # ETAP 5 — Dynamiczne testowanie (OWASP ZAP)
+  # ============================================================
+  dast:
+    name: "Etap 5 — DAST (OWASP ZAP na Juice Shop)"
+    needs: build-and-iac
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start OWASP Juice Shop
+        run: |
+          docker compose -f apps/juice-shop/docker-compose.yml up -d
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000 > /dev/null 2>&1; then
+              echo "Juice Shop is ready (after ${i} attempts)"
+              exit 0
+            fi
+            echo "Waiting for Juice Shop... (${i}/30)"
+            sleep 2
+          done
+          echo "ERROR: Juice Shop did not become ready in 60 seconds"
+          docker compose -f apps/juice-shop/docker-compose.yml logs
+          exit 1
+
+      - name: OWASP ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: http://localhost:3000
+          rules_file_name: configs/.zap/rules.tsv
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-report
+
+      - name: Stop Juice Shop
+        if: always()
+        run: docker compose -f apps/juice-shop/docker-compose.yml down --volumes
+
+  # ============================================================
+  # ETAP 6 — Raportowanie zbiorcze
+  # ============================================================
+  report:
+    name: "Etap 6 — Raportowanie zbiorcze"
+    needs: [secrets-scan, sast, sca, build-and-iac, dast]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate run summary
+        run: |
+          {
+            echo "## Podsumowanie potoku DevSecOps"
+            echo ""
+            echo "**Commit:** \`${{ github.sha }}\`"
+            echo "**Branch:** \`${{ github.ref_name }}\`"
+            echo "**Run ID:** \`${{ github.run_id }}\`"
+            echo ""
+            echo "| Etap | Narzędzie | Wynik |"
+            echo "|------|-----------|-------|"
+            echo "| 1 | Gitleaks | ${{ needs.secrets-scan.result }} |"
+            echo "| 2 | CodeQL (SAST) | ${{ needs.sast.result }} |"
+            echo "| 3 | Trivy + Dependency-Check (SCA) | ${{ needs.sca.result }} |"
+            echo "| 4 | Hadolint + Checkov + Trivy (IaC + image) | ${{ needs.build-and-iac.result }} |"
+            echo "| 5 | OWASP ZAP (DAST) | ${{ needs.dast.result }} |"
+            echo ""
+            echo "Wszystkie raporty SARIF są dostępne w zakładce **Security → Code scanning** repozytorium."
+          } >> "$GITHUB_STEP_SUMMARY"
