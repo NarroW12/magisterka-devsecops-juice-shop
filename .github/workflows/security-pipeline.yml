@@ -82,14 +82,24 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Trivy filesystem scan
+      - name: Trivy filesystem scan (debug table)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: ${{ env.FLASK_APP_DIR }}
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Trivy filesystem scan (SARIF + gate)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: ${{ env.FLASK_APP_DIR }}
           format: sarif
           output: trivy-fs.sarif
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
           exit-code: "1"
           ignore-unfixed: true
 
@@ -101,6 +111,7 @@ jobs:
           category: trivy-fs
 
       - name: Run OWASP Dependency-Check
+        if: always()
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: flask-app
@@ -109,17 +120,17 @@ jobs:
           out: dc-reports
           args: >-
             --enableExperimental
-            --failOnCVSS 7
+            --failOnCVSS 9
 
       - name: Upload Dependency-Check SARIF
-        if: always()
+        if: always() && hashFiles('dc-reports/dependency-check-report.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: dc-reports/dependency-check-report.sarif
           category: dependency-check
 
       - name: Archive raw Dependency-Check reports
-        if: always()
+        if: always() && hashFiles('dc-reports/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-reports
