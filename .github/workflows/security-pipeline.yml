@@ -161,14 +161,13 @@ jobs:
       - name: Build Docker image
         run: docker build -t flask-app:ci ${{ env.FLASK_APP_DIR }}
 
-      - name: Trivy image scan
+      - name: Trivy image scan (SARIF — informational, all severities)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: flask-app:ci
           format: sarif
           output: trivy-image.sarif
-          severity: CRITICAL
-          exit-code: "1"
+          exit-code: "0"
           ignore-unfixed: true
 
       - name: Upload Trivy image SARIF
@@ -178,7 +177,17 @@ jobs:
           sarif_file: trivy-image.sarif
           category: trivy-image
 
+      - name: Trivy image scan (gate — CRITICAL only)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: flask-app:ci
+          format: table
+          severity: CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
       - name: Checkov scan
+        if: always()
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: ${{ env.FLASK_APP_DIR }}
@@ -188,10 +197,10 @@ jobs:
           soft_fail: false
 
       - name: Upload Checkov SARIF
-        if: always()
+        if: always() && hashFiles('checkov-results.sarif/results_sarif.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: checkov-results.sarif
+          sarif_file: checkov-results.sarif/results_sarif.sarif
           category: checkov
 
   # ============================================================
