@@ -196,11 +196,31 @@ jobs:
           output_file_path: console,checkov-results.sarif
           soft_fail: false
 
+      - name: Locate Checkov SARIF
+        if: always()
+        id: locate-checkov
+        run: |
+          set +e
+          for candidate in \
+            "checkov-results.sarif/results_sarif.sarif" \
+            "checkov-results.sarif" \
+            "results_sarif.sarif" \
+            "results.sarif"; do
+            if [ -f "$candidate" ]; then
+              echo "path=$candidate" >> "$GITHUB_OUTPUT"
+              echo "Found Checkov SARIF at: $candidate"
+              exit 0
+            fi
+          done
+          echo "path=" >> "$GITHUB_OUTPUT"
+          echo "No Checkov SARIF file found. Workspace listing:"
+          ls -la
+
       - name: Upload Checkov SARIF
-        if: always() && hashFiles('checkov-results.sarif/results_sarif.sarif') != ''
+        if: always() && steps.locate-checkov.outputs.path != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: checkov-results.sarif/results_sarif.sarif
+          sarif_file: ${{ steps.locate-checkov.outputs.path }}
           category: checkov
 
   # ============================================================
