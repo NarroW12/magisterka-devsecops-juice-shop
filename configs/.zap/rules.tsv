@@ -1,0 +1,9 @@
+# OWASP ZAP rules configuration for the experiment.
+# Format: <plugin-id>	<action>	<comment>
+# action ∈ { IGNORE, WARN, FAIL }
+#
+# Default policy: alerts of severity Medium or higher cause the scan job to fail.
+# Listed exceptions below are intentionally downgraded for the experiment.
+
+10202	IGNORE	Anti-CSRF Tokens — irrelevant for stateless REST API testing
+10027	IGNORE	Information Disclosure — Suspicious Comments — noisy, evaluated manually

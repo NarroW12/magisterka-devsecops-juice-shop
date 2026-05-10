@@ -1,0 +1,9 @@
+failure-threshold: error
+
+trustedRegistries:
+  - docker.io
+  - ghcr.io
+
+# Reguły dopuszczone w środowisku eksperymentu — komentowane uzasadnienie poniżej.
+ignored:
+  - DL3008  # apt versioning — w obrazach python:slim niewykorzystywane

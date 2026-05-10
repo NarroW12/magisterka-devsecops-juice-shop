@@ -1,0 +1,11 @@
+name: "DevSecOps Experiment — CodeQL Configuration"
+
+queries:
+  - uses: security-and-quality
+
+paths:
+  - apps/flask-app
+
+paths-ignore:
+  - apps/flask-app/tests
+  - "**/__pycache__"

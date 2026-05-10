@@ -1,0 +1,26 @@
+title = "DevSecOps Experiment — Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+# Custom rule reinforcing AWS Access Key ID detection (scenario A).
+[[rules]]
+id = "experiment-aws-access-key-id"
+description = "AWS Access Key ID — custom rule for experiment scenario A"
+regex = '''AKIA[0-9A-Z]{16}'''
+tags = ["aws", "credentials", "experiment-scenario-a"]
+
+# Custom rule for AWS Secret Access Key.
+[[rules]]
+id = "experiment-aws-secret-access-key"
+description = "AWS Secret Access Key — custom rule for experiment scenario A"
+regex = '''(?i)aws(.{0,20})?(secret|access)?(.{0,20})?[\"']([A-Za-z0-9/+=]{40})[\"']'''
+tags = ["aws", "credentials", "experiment-scenario-a"]
+
+[allowlist]
+description = "Documentation and fixture allowlist"
+paths = [
+    '''docs/.*\.md''',
+    '''README\.md''',
+    '''.*/tests/fixtures/.*''',
+]
