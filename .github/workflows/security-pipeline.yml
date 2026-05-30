@@ -53,7 +53,7 @@ jobs:
 
       - name: Upload Gitleaks SARIF to Code Scanning
         if: always() && hashFiles('gitleaks.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: gitleaks.sarif
           category: gitleaks
@@ -97,13 +97,13 @@ jobs:
         run: pip install -r ${{ env.FLASK_APP_DIR }}/requirements.txt
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: python
           config-file: ./configs/codeql-config.yml
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:python"
 
@@ -130,7 +130,7 @@ jobs:
 
       - name: Upload Trivy filesystem SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-fs.sarif
           category: trivy-fs
@@ -160,7 +160,7 @@ jobs:
 
       - name: Upload Dependency-Check SARIF
         if: always() && hashFiles('dc-reports/dependency-check-report.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: dc-reports/dependency-check-report.sarif
           category: dependency-check
@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload Hadolint SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: hadolint.sarif
           category: hadolint
@@ -214,7 +214,7 @@ jobs:
 
       - name: Upload Trivy image SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-image.sarif
           category: trivy-image
@@ -260,7 +260,7 @@ jobs:
 
       - name: Upload Checkov SARIF
         if: always() && steps.locate-checkov.outputs.path != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: ${{ steps.locate-checkov.outputs.path }}
           category: checkov
