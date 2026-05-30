@@ -60,7 +60,7 @@ jobs:
 
       - name: Archive Gitleaks SARIF as artifact
         if: always() && hashFiles('gitleaks.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gitleaks-results.sarif
           path: gitleaks.sarif
@@ -167,7 +167,7 @@ jobs:
 
       - name: Archive raw Dependency-Check reports
         if: always() && hashFiles('dc-reports/**') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dependency-check-reports
           path: dc-reports/
