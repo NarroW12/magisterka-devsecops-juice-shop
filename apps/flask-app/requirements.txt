@@ -1,2 +1,5 @@
 Flask==3.0.3
 gunicorn==22.0.0
+
+# Scenariusz B: celowo podatna wersja, CVE-2020-14343 (CVSS 9.8 CRITICAL)
+PyYAML==5.3.1
