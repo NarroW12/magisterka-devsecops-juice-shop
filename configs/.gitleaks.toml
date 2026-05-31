@@ -18,9 +18,14 @@ regex = '''(?i)aws(.{0,20})?(secret|access)?(.{0,20})?[\"']([A-Za-z0-9/+=]{40})[
 tags = ["aws", "credentials", "experiment-scenario-a"]
 
 [allowlist]
-description = "Documentation and fixture allowlist"
+description = "Documentation, fixtures and experiment automation scripts"
 paths = [
     '''docs/.*\.md''',
     '''README\.md''',
     '''.*/tests/fixtures/.*''',
+    # Skrypty automatyzujące scenariusze A/B/C/D zawierają literalne
+    # przykładowe klucze AWS/payloady — są celowo wpisane w treść skryptu
+    # jako część eksperymentu, nie są prawdziwymi sekretami.
+    '''scripts/scenario_._start\.sh''',
+    '''scripts/scenario_._finish\.sh''',
 ]
