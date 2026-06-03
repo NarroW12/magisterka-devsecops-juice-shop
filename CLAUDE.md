@@ -122,6 +122,12 @@ Po pytaniu metodologicznym użytkownika („czemu 5 razy to samo?") podjęto dec
 o dodaniu **2 nowych wariantów** dla każdego scenariusza, po **5 runów** każdy.
 Szczegółowy plan w `docs/EXPERIMENT_PLAN_VARIANTS.md`.
 
+**Ważne — charakter fazy 2:** to **rozszerzenie (dodatek)** do głównego
+eksperymentu, nie zamiennik. Faza 1 jest kompletna i wystarczająca metodologicznie
+do napisania rozdziałów 4 i 5. Faza 2 wzbogaca ważność zewnętrzną o klasy
+podatności, lecz wyniki obu faz muszą być w pracy **opisane wspólnie**, jako
+jedna linia badawcza z dwiema fazami.
+
 Łącznie dodatkowo: 4 × 2 × 5 = **40 runów**, ~5-6 h pracy.
 
 ## Wskazówki dla nowej sesji rozpoczynającej fazę 2

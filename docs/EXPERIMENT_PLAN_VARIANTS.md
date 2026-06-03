@@ -1,5 +1,26 @@
 # Plan rozszerzenia eksperymentu — warianty
 
+> **Charakter dokumentu:** Niniejszy plan opisuje **rozszerzenie (dodatek) do
+> głównego eksperymentu**, którego pierwsza faza została już w pełni
+> zrealizowana, udokumentowana i zmergowana na gałąź `main`. Faza 1 sama
+> w sobie stanowi **kompletny i samodzielnie wystarczający** materiał
+> badawczy do opisania w rozdziałach 4 i 5 pracy magisterskiej —
+> potwierdza wszystkie cztery hipotezy szczegółowe (H1–H4) i dostarcza
+> bogatego zbioru danych (20 runów, 80 zrzutów ekranu, 20 raportów SARIF
+> oraz pełne raporty ZAP).
+>
+> **Cel fazy 2 (rozszerzenia):** wzmocnienie ważności zewnętrznej wyników
+> poprzez wykazanie, że narzędzia są skuteczne nie tylko w jednym
+> konkretnym wariancie podatności na scenariusz, lecz w całej **klasie
+> podobnych podatności**. Jest to bezpośrednia odpowiedź na potencjalne
+> pytanie komisji: *„czemu pięć razy uruchomiliście to samo?"*.
+>
+> **Praktyczna konsekwencja:** wyniki obu faz powinny być następnie
+> **wspólnie** opisane i przeanalizowane w rozdziałach 4 i 5 pracy
+> — faza 2 nie jest osobnym eksperymentem, lecz uzupełnieniem tej samej
+> linii badawczej, dodającym wariancję wprowadzanych podatności przy
+> zachowanej stałej konfiguracji narzędzi, środowiska i metryk.
+
 Dokument planistyczny dla **drugiej fazy** części empirycznej pracy magisterskiej. Pierwsza faza (5 powtórzeń każdego scenariusza z tą samą modyfikacją) została zakończona i zmergowana do `main`. Druga faza dodaje warianty z różnymi podatnościami w obrębie każdego scenariusza, co istotnie wzmacnia ważność zewnętrzną wyników.
 
 ## Stan obecny (po pierwszej fazie)
