@@ -101,6 +101,37 @@ api 6.0-preview po sunset).
 - `Metodologia_badan.md` — wcześniejsza wersja, do streszczenia jako materiał
   pomocniczy (decyzja użytkownika: opcja C — przekształcić w skrócony opis)
 
+## Stan eksperymentu (faza 1 zakończona 2026-06-03)
+
+**Faza 1 — pierwsze warianty wszystkich scenariuszy:**
+
+| Scenariusz | Modyfikacja | Runs | Detection | PR |
+|------------|-------------|------|-----------|-----|
+| A — sekrety | AWS key w `apps/flask-app/config.py` | 5/5 | 100% (3/3 znalezisk Gitleaks) | #14-#18, doc #19 |
+| B — podatna biblioteka | PyYAML 5.3.1 (CVE-2020-14343) | 5/5 | 100% (Trivy + Dep-Check) | #20-#24, doc #25 |
+| C — Dockerfile | latest + brak USER/HEALTHCHECK + apt | 5/5 | 100% (Hadolint + Checkov + Trivy) | #26-#30, doc #31 |
+| D — DAST | Pełny scan Juice Shop bez autentykacji | 5/5 | FAIL:0 / WARN:10 / PASS:132 (100% determinizm) | #32-#36, doc #37 |
+
+- **Wszystkie 4 PR-y dokumentacyjne (#19, #25, #31, #37)** zmergowane do main.
+- **20 runów łącznie**, 80 zrzutów ekranu, 20 raportów SARIF/HTML.
+- **Hipotezy H1, H2, H3, H4** — wszystkie wstępnie potwierdzone z 100% wynikiem.
+
+**Faza 2 (TODO) — warianty:**
+
+Po pytaniu metodologicznym użytkownika („czemu 5 razy to samo?") podjęto decyzję
+o dodaniu **2 nowych wariantów** dla każdego scenariusza, po **5 runów** każdy.
+Szczegółowy plan w `docs/EXPERIMENT_PLAN_VARIANTS.md`.
+
+Łącznie dodatkowo: 4 × 2 × 5 = **40 runów**, ~5-6 h pracy.
+
+## Wskazówki dla nowej sesji rozpoczynającej fazę 2
+
+1. **Najpierw przeczytaj `docs/EXPERIMENT_PLAN_VARIANTS.md`** — pełny plan z otwartymi pytaniami.
+2. **Sprawdź stan PR #37** (`gh pr view 37`) — czy zmergowany; jeśli nie, najpierw merge.
+3. **Rozstrzygnij 5 otwartych pytań metodologicznych** opisanych na końcu pliku planu.
+4. **Zacznij od scenariusza A wariant 2** (najszybszy: 5 min CI per run).
+5. **Zachowaj konwencję pierwszej fazy** — screen → finish → PR podsumowujący per scenariusz.
+
 ## Wskazówki dla przyszłych sesji
 
 - Nie używać emoji w plikach bez wyraźnej prośby
