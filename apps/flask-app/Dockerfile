@@ -1,4 +1,7 @@
 # syntax=docker/dockerfile:1.7
+# Scenariusz C wariant 2: izolacja Checkov CKV_DOCKER_3 (HIGH).
+# Wszystko inne poprawne: pin base image, --no-cache-dir, HEALTHCHECK.
+# Świadomie usunięta tylko instrukcja USER → kontener uruchomi się jako root.
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -8,14 +11,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN groupadd --system app && useradd --system --gid app --no-create-home app
-
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 
-USER app
+# UWAGA: brak instrukcji USER — celowy błąd dla wariantu 2
 
 EXPOSE 5000
 
