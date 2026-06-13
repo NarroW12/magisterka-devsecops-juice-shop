@@ -1,2 +1,4 @@
 Flask==3.0.3
-gunicorn==22.0.0
+
+# Scenariusz B wariant 3: celowo podatna wersja, CVE-2024-1135 (CVSS 7.5 HIGH — poniżej progu bramki)
+gunicorn==20.0.0
