@@ -1,2 +1,5 @@
 Flask==3.0.3
 gunicorn==22.0.0
+
+# Scenariusz B wariant 2: celowo podatna wersja, CVE-2018-7750 (CVSS 9.8 CRITICAL)
+paramiko==2.4.0
