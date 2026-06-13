@@ -135,6 +135,14 @@ jobs:
           sarif_file: trivy-fs.sarif
           category: trivy-fs
 
+      - name: Archive Trivy filesystem SARIF as artifact
+        if: always() && hashFiles('trivy-fs.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs-results.sarif
+          path: trivy-fs.sarif
+          retention-days: 14
+
       - name: Trivy filesystem scan (gate — CRITICAL only)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -200,6 +208,14 @@ jobs:
           sarif_file: hadolint.sarif
           category: hadolint
 
+      - name: Archive Hadolint SARIF as artifact
+        if: always() && hashFiles('hadolint.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: hadolint-results.sarif
+          path: hadolint.sarif
+          retention-days: 14
+
       - name: Build Docker image
         run: docker build -t flask-app:ci ${{ env.FLASK_APP_DIR }}
 
@@ -218,6 +234,14 @@ jobs:
         with:
           sarif_file: trivy-image.sarif
           category: trivy-image
+
+      - name: Archive Trivy image SARIF as artifact
+        if: always() && hashFiles('trivy-image.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-image-results.sarif
+          path: trivy-image.sarif
+          retention-days: 14
 
       - name: Trivy image scan (gate — CRITICAL only)
         uses: aquasecurity/trivy-action@v0.36.0
@@ -264,6 +288,14 @@ jobs:
         with:
           sarif_file: ${{ steps.locate-checkov.outputs.path }}
           category: checkov
+
+      - name: Archive Checkov SARIF as artifact
+        if: always() && steps.locate-checkov.outputs.path != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-results-sarif
+          path: ${{ steps.locate-checkov.outputs.path }}
+          retention-days: 14
 
   # ============================================================
   # ETAP 5 — Dynamiczne testowanie (OWASP ZAP)

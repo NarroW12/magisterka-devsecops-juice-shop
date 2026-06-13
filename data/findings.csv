@@ -1,0 +1,149 @@
+scenario,variant,run,tool,rule_id,severity,cvss,file,line,message
+scenario-a,1,1,gitleaks,experiment-aws-secret-access-key,critical,,apps/flask-app/config.py,10,experiment-aws-secret-access-key has detected secret for file apps/flask-app/config.py at commit 7304be0396a5dde17465821472b63a6a1861c48c.
+scenario-a,1,1,gitleaks,aws-access-token,critical,,apps/flask-app/config.py,9,aws-access-token has detected secret for file apps/flask-app/config.py at commit 7304be0396a5dde17465821472b63a6a1861c48c.
+scenario-a,1,1,gitleaks,experiment-aws-access-key-id,critical,,apps/flask-app/config.py,9,experiment-aws-access-key-id has detected secret for file apps/flask-app/config.py at commit 7304be0396a5dde17465821472b63a6a1861c48c.
+scenario-a,1,2,gitleaks,experiment-aws-access-key-id,critical,,apps/flask-app/config.py,9,experiment-aws-access-key-id has detected secret for file apps/flask-app/config.py at commit cbaa3a109708f814cb2235568572dfcba0765330.
+scenario-a,1,2,gitleaks,aws-access-token,critical,,apps/flask-app/config.py,9,aws-access-token has detected secret for file apps/flask-app/config.py at commit cbaa3a109708f814cb2235568572dfcba0765330.
+scenario-a,1,2,gitleaks,experiment-aws-secret-access-key,critical,,apps/flask-app/config.py,10,experiment-aws-secret-access-key has detected secret for file apps/flask-app/config.py at commit cbaa3a109708f814cb2235568572dfcba0765330.
+scenario-a,1,3,gitleaks,aws-access-token,critical,,apps/flask-app/config.py,9,aws-access-token has detected secret for file apps/flask-app/config.py at commit 12dedd544bbfe963a0035eeced91e004f4c9acf3.
+scenario-a,1,3,gitleaks,experiment-aws-secret-access-key,critical,,apps/flask-app/config.py,10,experiment-aws-secret-access-key has detected secret for file apps/flask-app/config.py at commit 12dedd544bbfe963a0035eeced91e004f4c9acf3.
+scenario-a,1,3,gitleaks,experiment-aws-access-key-id,critical,,apps/flask-app/config.py,9,experiment-aws-access-key-id has detected secret for file apps/flask-app/config.py at commit 12dedd544bbfe963a0035eeced91e004f4c9acf3.
+scenario-a,1,4,gitleaks,aws-access-token,critical,,apps/flask-app/config.py,9,aws-access-token has detected secret for file apps/flask-app/config.py at commit 2c6bb7e238d86e0ca18659a0d25e485565083357.
+scenario-a,1,4,gitleaks,experiment-aws-secret-access-key,critical,,apps/flask-app/config.py,10,experiment-aws-secret-access-key has detected secret for file apps/flask-app/config.py at commit 2c6bb7e238d86e0ca18659a0d25e485565083357.
+scenario-a,1,4,gitleaks,experiment-aws-access-key-id,critical,,apps/flask-app/config.py,9,experiment-aws-access-key-id has detected secret for file apps/flask-app/config.py at commit 2c6bb7e238d86e0ca18659a0d25e485565083357.
+scenario-a,1,5,gitleaks,experiment-aws-access-key-id,critical,,apps/flask-app/config.py,9,experiment-aws-access-key-id has detected secret for file apps/flask-app/config.py at commit 4630d5a4ba6b995be1187a8ccd200344a18ccb24.
+scenario-a,1,5,gitleaks,aws-access-token,critical,,apps/flask-app/config.py,9,aws-access-token has detected secret for file apps/flask-app/config.py at commit 4630d5a4ba6b995be1187a8ccd200344a18ccb24.
+scenario-a,1,5,gitleaks,experiment-aws-secret-access-key,critical,,apps/flask-app/config.py,10,experiment-aws-secret-access-key has detected secret for file apps/flask-app/config.py at commit 4630d5a4ba6b995be1187a8ccd200344a18ccb24.
+scenario-b,1,1,dependency-check,CVE-2020-14343,critical,9.8,file:///github/workspace/apps/flask-app/requirements.txt:PyYAML/5.3.1,,"CVE-2020-14343 - A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it proces"
+scenario-b,1,2,dependency-check,CVE-2020-14343,critical,9.8,file:///github/workspace/apps/flask-app/requirements.txt:PyYAML/5.3.1,,"CVE-2020-14343 - A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it proces"
+scenario-b,1,3,dependency-check,CVE-2020-14343,critical,9.8,file:///github/workspace/apps/flask-app/requirements.txt:PyYAML/5.3.1,,"CVE-2020-14343 - A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it proces"
+scenario-b,1,4,dependency-check,CVE-2020-14343,critical,9.8,file:///github/workspace/apps/flask-app/requirements.txt:PyYAML/5.3.1,,"CVE-2020-14343 - A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it proces"
+scenario-b,1,5,dependency-check,CVE-2020-14343,critical,9.8,file:///github/workspace/apps/flask-app/requirements.txt:PyYAML/5.3.1,,"CVE-2020-14343 - A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it proces"
+scenario-c,1,2,zap,10095,medium,,http://localhost:3000,31,Backup File Disclosure
+scenario-c,1,2,zap,40038,medium,,http://localhost:3000,5,Bypassing 403
+scenario-c,1,2,zap,40040,medium,,http://localhost:3000,5,CORS Misconfiguration
+scenario-c,1,2,zap,10038,medium,,http://localhost:3000,5,Content Security Policy (CSP) Header Not Set
+scenario-c,1,2,zap,10098,medium,,http://localhost:3000,5,Cross-Domain Misconfiguration
+scenario-c,1,2,zap,10017,low,,http://localhost:3000,5,Cross-Domain JavaScript Source File Inclusion
+scenario-c,1,2,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Embedder-Policy Header Missing or Invalid
+scenario-c,1,2,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Opener-Policy Header Missing or Invalid
+scenario-c,1,2,zap,10110,low,,http://localhost:3000,2,Dangerous JS Functions
+scenario-c,1,2,zap,10063,low,,http://localhost:3000,5,Deprecated Feature Policy Header Set
+scenario-c,1,2,zap,10096,low,,http://localhost:3000,1,Timestamp Disclosure - Unix
+scenario-c,1,2,zap,10109,info,,http://localhost:3000,5,Modern Web Application
+scenario-c,1,2,zap,10049,info,,http://localhost:3000,1,Non-Storable Content
+scenario-c,1,2,zap,10049,info,,http://localhost:3000,1,Storable and Cacheable Content
+scenario-c,1,2,zap,10049,info,,http://localhost:3000,5,Storable but Non-Cacheable Content
+scenario-c,1,2,zap,10104,info,,http://localhost:3000,5,User Agent Fuzzer
+scenario-c,1,4,zap,10095,medium,,http://localhost:3000,31,Backup File Disclosure
+scenario-c,1,4,zap,40038,medium,,http://localhost:3000,5,Bypassing 403
+scenario-c,1,4,zap,40040,medium,,http://localhost:3000,5,CORS Misconfiguration
+scenario-c,1,4,zap,10038,medium,,http://localhost:3000,5,Content Security Policy (CSP) Header Not Set
+scenario-c,1,4,zap,10098,medium,,http://localhost:3000,5,Cross-Domain Misconfiguration
+scenario-c,1,4,zap,10017,low,,http://localhost:3000,5,Cross-Domain JavaScript Source File Inclusion
+scenario-c,1,4,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Embedder-Policy Header Missing or Invalid
+scenario-c,1,4,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Opener-Policy Header Missing or Invalid
+scenario-c,1,4,zap,10110,low,,http://localhost:3000,2,Dangerous JS Functions
+scenario-c,1,4,zap,10063,low,,http://localhost:3000,5,Deprecated Feature Policy Header Set
+scenario-c,1,4,zap,10096,low,,http://localhost:3000,1,Timestamp Disclosure - Unix
+scenario-c,1,4,zap,10109,info,,http://localhost:3000,5,Modern Web Application
+scenario-c,1,4,zap,10049,info,,http://localhost:3000,1,Non-Storable Content
+scenario-c,1,4,zap,10049,info,,http://localhost:3000,1,Storable and Cacheable Content
+scenario-c,1,4,zap,10049,info,,http://localhost:3000,5,Storable but Non-Cacheable Content
+scenario-c,1,4,zap,10104,info,,http://localhost:3000,5,User Agent Fuzzer
+scenario-c,1,5,zap,10095,medium,,http://localhost:3000,31,Backup File Disclosure
+scenario-c,1,5,zap,40038,medium,,http://localhost:3000,5,Bypassing 403
+scenario-c,1,5,zap,40040,medium,,http://localhost:3000,5,CORS Misconfiguration
+scenario-c,1,5,zap,10038,medium,,http://localhost:3000,5,Content Security Policy (CSP) Header Not Set
+scenario-c,1,5,zap,10098,medium,,http://localhost:3000,5,Cross-Domain Misconfiguration
+scenario-c,1,5,zap,10017,low,,http://localhost:3000,5,Cross-Domain JavaScript Source File Inclusion
+scenario-c,1,5,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Embedder-Policy Header Missing or Invalid
+scenario-c,1,5,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Opener-Policy Header Missing or Invalid
+scenario-c,1,5,zap,10110,low,,http://localhost:3000,2,Dangerous JS Functions
+scenario-c,1,5,zap,10063,low,,http://localhost:3000,5,Deprecated Feature Policy Header Set
+scenario-c,1,5,zap,10096,low,,http://localhost:3000,1,Timestamp Disclosure - Unix
+scenario-c,1,5,zap,10109,info,,http://localhost:3000,5,Modern Web Application
+scenario-c,1,5,zap,10049,info,,http://localhost:3000,1,Non-Storable Content
+scenario-c,1,5,zap,10049,info,,http://localhost:3000,1,Storable and Cacheable Content
+scenario-c,1,5,zap,10049,info,,http://localhost:3000,5,Storable but Non-Cacheable Content
+scenario-c,1,5,zap,10104,info,,http://localhost:3000,5,User Agent Fuzzer
+scenario-d,1,1,zap,10095,medium,,http://localhost:3000,31,Backup File Disclosure
+scenario-d,1,1,zap,40038,medium,,http://localhost:3000,5,Bypassing 403
+scenario-d,1,1,zap,40040,medium,,http://localhost:3000,5,CORS Misconfiguration
+scenario-d,1,1,zap,10038,medium,,http://localhost:3000,5,Content Security Policy (CSP) Header Not Set
+scenario-d,1,1,zap,10098,medium,,http://localhost:3000,5,Cross-Domain Misconfiguration
+scenario-d,1,1,zap,10017,low,,http://localhost:3000,5,Cross-Domain JavaScript Source File Inclusion
+scenario-d,1,1,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Embedder-Policy Header Missing or Invalid
+scenario-d,1,1,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Opener-Policy Header Missing or Invalid
+scenario-d,1,1,zap,10110,low,,http://localhost:3000,2,Dangerous JS Functions
+scenario-d,1,1,zap,10063,low,,http://localhost:3000,5,Deprecated Feature Policy Header Set
+scenario-d,1,1,zap,10096,low,,http://localhost:3000,1,Timestamp Disclosure - Unix
+scenario-d,1,1,zap,10109,info,,http://localhost:3000,5,Modern Web Application
+scenario-d,1,1,zap,10049,info,,http://localhost:3000,2,Non-Storable Content
+scenario-d,1,1,zap,10049,info,,http://localhost:3000,1,Storable and Cacheable Content
+scenario-d,1,1,zap,10049,info,,http://localhost:3000,5,Storable but Non-Cacheable Content
+scenario-d,1,1,zap,10104,info,,http://localhost:3000,5,User Agent Fuzzer
+scenario-d,1,2,zap,10095,medium,,http://localhost:3000,31,Backup File Disclosure
+scenario-d,1,2,zap,40038,medium,,http://localhost:3000,5,Bypassing 403
+scenario-d,1,2,zap,40040,medium,,http://localhost:3000,5,CORS Misconfiguration
+scenario-d,1,2,zap,10038,medium,,http://localhost:3000,5,Content Security Policy (CSP) Header Not Set
+scenario-d,1,2,zap,10098,medium,,http://localhost:3000,5,Cross-Domain Misconfiguration
+scenario-d,1,2,zap,10017,low,,http://localhost:3000,5,Cross-Domain JavaScript Source File Inclusion
+scenario-d,1,2,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Embedder-Policy Header Missing or Invalid
+scenario-d,1,2,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Opener-Policy Header Missing or Invalid
+scenario-d,1,2,zap,10110,low,,http://localhost:3000,2,Dangerous JS Functions
+scenario-d,1,2,zap,10063,low,,http://localhost:3000,5,Deprecated Feature Policy Header Set
+scenario-d,1,2,zap,10096,low,,http://localhost:3000,1,Timestamp Disclosure - Unix
+scenario-d,1,2,zap,10109,info,,http://localhost:3000,5,Modern Web Application
+scenario-d,1,2,zap,10049,info,,http://localhost:3000,1,Non-Storable Content
+scenario-d,1,2,zap,10049,info,,http://localhost:3000,2,Storable and Cacheable Content
+scenario-d,1,2,zap,10049,info,,http://localhost:3000,5,Storable but Non-Cacheable Content
+scenario-d,1,2,zap,10104,info,,http://localhost:3000,5,User Agent Fuzzer
+scenario-d,1,3,zap,10095,medium,,http://localhost:3000,31,Backup File Disclosure
+scenario-d,1,3,zap,40038,medium,,http://localhost:3000,5,Bypassing 403
+scenario-d,1,3,zap,40040,medium,,http://localhost:3000,5,CORS Misconfiguration
+scenario-d,1,3,zap,10038,medium,,http://localhost:3000,5,Content Security Policy (CSP) Header Not Set
+scenario-d,1,3,zap,10098,medium,,http://localhost:3000,5,Cross-Domain Misconfiguration
+scenario-d,1,3,zap,10017,low,,http://localhost:3000,5,Cross-Domain JavaScript Source File Inclusion
+scenario-d,1,3,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Embedder-Policy Header Missing or Invalid
+scenario-d,1,3,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Opener-Policy Header Missing or Invalid
+scenario-d,1,3,zap,10110,low,,http://localhost:3000,2,Dangerous JS Functions
+scenario-d,1,3,zap,10063,low,,http://localhost:3000,5,Deprecated Feature Policy Header Set
+scenario-d,1,3,zap,10096,low,,http://localhost:3000,1,Timestamp Disclosure - Unix
+scenario-d,1,3,zap,10109,info,,http://localhost:3000,5,Modern Web Application
+scenario-d,1,3,zap,10049,info,,http://localhost:3000,2,Non-Storable Content
+scenario-d,1,3,zap,10049,info,,http://localhost:3000,1,Storable and Cacheable Content
+scenario-d,1,3,zap,10049,info,,http://localhost:3000,5,Storable but Non-Cacheable Content
+scenario-d,1,3,zap,10104,info,,http://localhost:3000,5,User Agent Fuzzer
+scenario-d,1,4,zap,10095,medium,,http://localhost:3000,31,Backup File Disclosure
+scenario-d,1,4,zap,40038,medium,,http://localhost:3000,5,Bypassing 403
+scenario-d,1,4,zap,40040,medium,,http://localhost:3000,5,CORS Misconfiguration
+scenario-d,1,4,zap,10038,medium,,http://localhost:3000,5,Content Security Policy (CSP) Header Not Set
+scenario-d,1,4,zap,10098,medium,,http://localhost:3000,5,Cross-Domain Misconfiguration
+scenario-d,1,4,zap,10017,low,,http://localhost:3000,5,Cross-Domain JavaScript Source File Inclusion
+scenario-d,1,4,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Embedder-Policy Header Missing or Invalid
+scenario-d,1,4,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Opener-Policy Header Missing or Invalid
+scenario-d,1,4,zap,10110,low,,http://localhost:3000,2,Dangerous JS Functions
+scenario-d,1,4,zap,10063,low,,http://localhost:3000,5,Deprecated Feature Policy Header Set
+scenario-d,1,4,zap,10096,low,,http://localhost:3000,1,Timestamp Disclosure - Unix
+scenario-d,1,4,zap,10109,info,,http://localhost:3000,5,Modern Web Application
+scenario-d,1,4,zap,10049,info,,http://localhost:3000,1,Non-Storable Content
+scenario-d,1,4,zap,10049,info,,http://localhost:3000,2,Storable and Cacheable Content
+scenario-d,1,4,zap,10049,info,,http://localhost:3000,5,Storable but Non-Cacheable Content
+scenario-d,1,4,zap,10104,info,,http://localhost:3000,5,User Agent Fuzzer
+scenario-d,1,5,zap,10095,medium,,http://localhost:3000,31,Backup File Disclosure
+scenario-d,1,5,zap,40038,medium,,http://localhost:3000,5,Bypassing 403
+scenario-d,1,5,zap,40040,medium,,http://localhost:3000,5,CORS Misconfiguration
+scenario-d,1,5,zap,10038,medium,,http://localhost:3000,5,Content Security Policy (CSP) Header Not Set
+scenario-d,1,5,zap,10098,medium,,http://localhost:3000,5,Cross-Domain Misconfiguration
+scenario-d,1,5,zap,10017,low,,http://localhost:3000,5,Cross-Domain JavaScript Source File Inclusion
+scenario-d,1,5,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Embedder-Policy Header Missing or Invalid
+scenario-d,1,5,zap,90004,low,,http://localhost:3000,5,Cross-Origin-Opener-Policy Header Missing or Invalid
+scenario-d,1,5,zap,10110,low,,http://localhost:3000,2,Dangerous JS Functions
+scenario-d,1,5,zap,10063,low,,http://localhost:3000,5,Deprecated Feature Policy Header Set
+scenario-d,1,5,zap,10096,low,,http://localhost:3000,1,Timestamp Disclosure - Unix
+scenario-d,1,5,zap,10109,info,,http://localhost:3000,5,Modern Web Application
+scenario-d,1,5,zap,10049,info,,http://localhost:3000,2,Non-Storable Content
+scenario-d,1,5,zap,10049,info,,http://localhost:3000,1,Storable and Cacheable Content
+scenario-d,1,5,zap,10049,info,,http://localhost:3000,5,Storable but Non-Cacheable Content
+scenario-d,1,5,zap,10104,info,,http://localhost:3000,5,User Agent Fuzzer

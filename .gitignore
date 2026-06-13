@@ -22,10 +22,12 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Eksperyment — surowe wyniki
+# Eksperyment — surowe wyniki SARIF/HTML/JSON (rekonstruowalne z gh artifacts)
 data/raw/
-data/results.csv
 data/plots/
+
+# Zagregowane CSV (data/results.csv, data/findings.csv) są wersjonowane —
+# stanowią materiał wejściowy do rozdz. 5 i powinny być dostępne bez raw/.
 
 # Materiały referencyjne (poza repozytorium)
 _reference_*/
