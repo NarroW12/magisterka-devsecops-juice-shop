@@ -119,10 +119,14 @@ api 6.0-preview po sunset).
 **Faza 2 (TODO) — warianty:**
 
 Po pytaniu metodologicznym użytkownika („czemu 5 razy to samo?") podjęto decyzję
-o dodaniu **2 nowych wariantów** dla każdego scenariusza, po **5 runów** każdy.
-Szczegółowy plan w `docs/EXPERIMENT_PLAN_VARIANTS.md`.
+o dodaniu nowych wariantów. **35 runów łącznie** (asymetria: 2 warianty dla A/B/C,
+1 dla D — uzasadnione metodologicznie, plan w `docs/EXPERIMENT_PLAN_VARIANTS.md`).
 
-Łącznie dodatkowo: 4 × 2 × 5 = **40 runów**, ~5-6 h pracy.
+Kluczowa decyzja: **scenariusz B-V3 = gunicorn 20.0.0 (HIGH 7.5) jako kontrola
+negatywna** — bramka świadomie nie blokuje przy CVSS < 9, co wzmacnia weryfikację H2.
+
+Przed pierwszym runem fazy 2: rozszerzyć workflow o `upload-artifact` dla Trivy /
+Hadolint / Checkov SARIF (faza 1 nie archiwizowała ich lokalnie).
 
 ## Wskazówki dla nowej sesji rozpoczynającej fazę 2
 
