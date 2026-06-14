@@ -38,6 +38,12 @@ SUMMARY_FIELDS = [
     "depcheck_high",
     "depcheck_medium",
     "depcheck_low",
+    "trivy_critical",
+    "trivy_high",
+    "trivy_medium",
+    "trivy_low",
+    "hadolint_findings",
+    "checkov_findings",
     "zap_high",
     "zap_medium",
     "zap_low",
@@ -204,6 +210,103 @@ def parse_depcheck(sarif_path: Path) -> list[dict]:
 _ZAP_RISK_MAP = {0: "info", 1: "low", 2: "medium", 3: "high"}
 
 
+def _cvss_to_severity(cvss: float | None) -> str:
+    """Map CVSS v3 base score to severity bucket per NVD ranges."""
+    if cvss is None:
+        return "low"
+    if cvss >= 9.0:
+        return "critical"
+    if cvss >= 7.0:
+        return "high"
+    if cvss >= 4.0:
+        return "medium"
+    return "low"
+
+
+def parse_trivy(sarif_path: Path) -> list[dict]:
+    """Trivy SARIF — severity z properties.security-severity (CVSS string)."""
+    try:
+        data = json.loads(sarif_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        print(f"[WARN] Bad trivy SARIF {sarif_path}: {exc}", file=sys.stderr)
+        return []
+
+    findings = []
+    for run in data.get("runs", []):
+        rules = _build_rule_index(run)
+        for r in run.get("results", []):
+            rule_id = r.get("ruleId", "")
+            rule = rules.get(rule_id, {})
+            cvss_str = rule.get("properties", {}).get("security-severity", "")
+            try:
+                cvss = float(cvss_str) if cvss_str else None
+            except (TypeError, ValueError):
+                cvss = None
+            loc = r.get("locations", [{}])[0].get("physicalLocation", {})
+            findings.append(
+                {
+                    "tool": "trivy",
+                    "rule_id": rule_id,
+                    "severity": _cvss_to_severity(cvss),
+                    "cvss": cvss or "",
+                    "file": loc.get("artifactLocation", {}).get("uri", ""),
+                    "line": loc.get("region", {}).get("startLine", ""),
+                    "message": (r.get("message", {}).get("text", "") or "")[:160],
+                }
+            )
+    return findings
+
+
+def parse_hadolint(sarif_path: Path) -> list[dict]:
+    try:
+        data = json.loads(sarif_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        print(f"[WARN] Bad hadolint SARIF {sarif_path}: {exc}", file=sys.stderr)
+        return []
+
+    findings = []
+    for run in data.get("runs", []):
+        for r in run.get("results", []):
+            loc = r.get("locations", [{}])[0].get("physicalLocation", {})
+            findings.append(
+                {
+                    "tool": "hadolint",
+                    "rule_id": r.get("ruleId", ""),
+                    "severity": r.get("level", "warning"),
+                    "cvss": "",
+                    "file": loc.get("artifactLocation", {}).get("uri", ""),
+                    "line": loc.get("region", {}).get("startLine", ""),
+                    "message": (r.get("message", {}).get("text", "") or "")[:160],
+                }
+            )
+    return findings
+
+
+def parse_checkov(sarif_path: Path) -> list[dict]:
+    try:
+        data = json.loads(sarif_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        print(f"[WARN] Bad checkov SARIF {sarif_path}: {exc}", file=sys.stderr)
+        return []
+
+    findings = []
+    for run in data.get("runs", []):
+        for r in run.get("results", []):
+            loc = r.get("locations", [{}])[0].get("physicalLocation", {})
+            findings.append(
+                {
+                    "tool": "checkov",
+                    "rule_id": r.get("ruleId", ""),
+                    "severity": r.get("level", "error"),
+                    "cvss": "",
+                    "file": loc.get("artifactLocation", {}).get("uri", ""),
+                    "line": loc.get("region", {}).get("startLine", ""),
+                    "message": (r.get("message", {}).get("text", "") or "")[:160],
+                }
+            )
+    return findings
+
+
 def parse_zap(json_path: Path) -> list[dict]:
     """ZAP JSON: aggregate alerts; expand by `count` instances per alert."""
     try:
@@ -237,13 +340,22 @@ def collect_run(run_dir: Path) -> list[dict]:
     """Parse all known artefacts in a single run directory."""
     findings: list[dict] = []
 
-    for gl in run_dir.rglob("gitleaks.sarif"):
-        findings.extend(parse_gitleaks(gl))
-    for dc in run_dir.rglob("dependency-check-report.sarif"):
-        findings.extend(parse_depcheck(dc))
+    # Konkretne nazwy plików — uniknięcie kolizji z folderami artefaktów
+    # (np. `trivy-fs-results.sarif/` jako artifact zawiera `trivy-fs.sarif` jako plik).
+    for name, parser in (
+        ("gitleaks.sarif", parse_gitleaks),
+        ("dependency-check-report.sarif", parse_depcheck),
+        ("trivy-fs.sarif", parse_trivy),
+        ("trivy-image.sarif", parse_trivy),
+        ("hadolint.sarif", parse_hadolint),
+        ("checkov-results.sarif", parse_checkov),
+    ):
+        for path in run_dir.rglob(name):
+            if path.is_file():
+                findings.extend(parser(path))
+
     for zp in run_dir.rglob("report_json.json"):
-        # Tylko jeśli ścieżka zawiera "zap" — uniknij przypadkowych kolizji.
-        if "zap" in str(zp).lower():
+        if zp.is_file() and "zap" in str(zp).lower():
             findings.extend(parse_zap(zp))
     return findings
 
@@ -255,14 +367,20 @@ def summarise(scenario: str, variant: int, run: int, findings: list[dict]) -> di
 
     gitleaks_total = sum(c for (t, _), c in by_tool_sev.items() if t == "gitleaks")
     dc = {sev: by_tool_sev.get(("dependency-check", sev), 0) for sev in SEV_BUCKETS}
+    trivy = {sev: by_tool_sev.get(("trivy", sev), 0) for sev in SEV_BUCKETS}
     zap = {sev: by_tool_sev.get(("zap", sev), 0) for sev in SEV_BUCKETS}
+    hadolint_total = sum(c for (t, _), c in by_tool_sev.items() if t == "hadolint")
+    checkov_total = sum(c for (t, _), c in by_tool_sev.items() if t == "checkov")
 
-    # Wstępna heurystyka bramki: Gitleaks > 0 LUB Dep-Check CRITICAL > 0 LUB ZAP High > 0.
-    # Faktyczne PASS/FAIL bramki workflow trzeba doczytać z gh API w osobnym kroku.
+    # Heurystyka bramki: blokada gdy Gitleaks > 0 LUB Dep-Check CRITICAL > 0
+    # LUB Trivy CRITICAL > 0 (próg bramki Trivy) LUB Checkov > 0 (soft_fail: false).
+    # Hadolint blokuje przy `failure-threshold: error` — tu zachowawczo: 0+ findings nie wystarczy
+    # bo poziom error w SARIF dla Hadolint nie zawsze pokrywa się z threshold.
     gate_blocked = (
         gitleaks_total > 0
         or dc["critical"] > 0
-        or zap["high"] > 0
+        or trivy["critical"] > 0
+        or checkov_total > 0
     )
 
     return {
@@ -274,6 +392,12 @@ def summarise(scenario: str, variant: int, run: int, findings: list[dict]) -> di
         "depcheck_high": dc["high"],
         "depcheck_medium": dc["medium"],
         "depcheck_low": dc["low"],
+        "trivy_critical": trivy["critical"],
+        "trivy_high": trivy["high"],
+        "trivy_medium": trivy["medium"],
+        "trivy_low": trivy["low"],
+        "hadolint_findings": hadolint_total,
+        "checkov_findings": checkov_total,
         "zap_high": zap["high"],
         "zap_medium": zap["medium"],
         "zap_low": zap["low"],

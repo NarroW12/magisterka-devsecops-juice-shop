@@ -101,7 +101,7 @@ api 6.0-preview po sunset).
 - `Metodologia_badan.md` — wcześniejsza wersja, do streszczenia jako materiał
   pomocniczy (decyzja użytkownika: opcja C — przekształcić w skrócony opis)
 
-## Stan eksperymentu (faza 1 zakończona 2026-06-03)
+## Stan eksperymentu (faza 1 + faza 2 zakończone 2026-06-13)
 
 **Faza 1 — pierwsze warianty wszystkich scenariuszy:**
 
@@ -110,23 +110,31 @@ api 6.0-preview po sunset).
 | A — sekrety | AWS key w `apps/flask-app/config.py` | 5/5 | 100% (3/3 znalezisk Gitleaks) | #14-#18, doc #19 |
 | B — podatna biblioteka | PyYAML 5.3.1 (CVE-2020-14343) | 5/5 | 100% (Trivy + Dep-Check) | #20-#24, doc #25 |
 | C — Dockerfile | latest + brak USER/HEALTHCHECK + apt | 5/5 | 100% (Hadolint + Checkov + Trivy) | #26-#30, doc #31 |
-| D — DAST | Pełny scan Juice Shop bez autentykacji | 5/5 | FAIL:0 / WARN:10 / PASS:132 (100% determinizm) | #32-#36, doc #37 |
+| D — DAST | Pełny scan Juice Shop bez autentykacji | 5/5 | 16 alertów × 5 (100% determinizm) | #32-#36, doc #37 |
 
-- **Wszystkie 4 PR-y dokumentacyjne (#19, #25, #31, #37)** zmergowane do main.
-- **20 runów łącznie**, 80 zrzutów ekranu, 20 raportów SARIF/HTML.
-- **Hipotezy H1, H2, H3, H4** — wszystkie wstępnie potwierdzone z 100% wynikiem.
+**Faza 2 — warianty (zakończona 2026-06-13):**
 
-**Faza 2 (TODO) — warianty:**
+| Scenariusz | Wariant | Payload | Runs | Detection | Wynik bramki |
+|------------|---------|---------|------|-----------|--------------|
+| A | V2 | GitHub PAT w `.env.example` | 3/3 | 1 finding (`github-pat`) | BLOCK Etap 1 ✓ |
+| B | V2 | paramiko 2.4.0 (CVE-2018-7750 9.8) | 3/3 | Trivy 3 CVE, Dep-Check 3 CVE | BLOCK Etap 3 ✓ |
+| B | V3 (kontrola **−**) | gunicorn 20.0.0 (CVE-2024-1135 7.5) | 3/3 | Trivy 3 CVE, **Dep-Check 0** | **PASS** wszystkie etapy ✓ |
+| C | V2 | Brak USER w Dockerfile | 3/3 | 1 finding Checkov CKV_DOCKER_3 | BLOCK Etap 4 ✓ |
+| C | V3 | Brak HEALTHCHECK + ADD | 3/3 | 5 findings (Checkov+Hadolint) | BLOCK Etap 4 ✓ |
 
-Po pytaniu metodologicznym użytkownika („czemu 5 razy to samo?") podjęto decyzję
-o dodaniu nowych wariantów. **35 runów łącznie** (asymetria: 2 warianty dla A/B/C,
-1 dla D — uzasadnione metodologicznie, plan w `docs/EXPERIMENT_PLAN_VARIANTS.md`).
+- **Łącznie 35 runów** (20 fazy 1 + 15 fazy 2)
+- **Świadomie pominięte**: A V3 (RSA), D V2 (auth scan), D V3 (aggressive AJAX) — uzasadnienia w `docs/EXPERIMENT_PLAN_VARIANTS.md`
+- **Substytucja B V2**: Pillow 8.0.0 (planowane) → paramiko 2.4.0 — Pillow nie kompilował się na Python 3.12 bez `libjpeg-dev`
+- **Kluczowe znalezisko**: asymetria Trivy vs Dep-Check (B V3 → 0 findings w Dep-Check, 3 w Trivy)
 
-Kluczowa decyzja: **scenariusz B-V3 = gunicorn 20.0.0 (HIGH 7.5) jako kontrola
-negatywna** — bramka świadomie nie blokuje przy CVSS < 9, co wzmacnia weryfikację H2.
+**Następne kroki:**
 
-Przed pierwszym runem fazy 2: rozszerzyć workflow o `upload-artifact` dla Trivy /
-Hadolint / Checkov SARIF (faza 1 nie archiwizowała ich lokalnie).
+1. Krok 1 ✓ — aktualizacja planu i CLAUDE.md
+2. Krok 2 (TODO) — regeneracja `data/results.csv` z 35 runami
+3. Krok 3 (TODO) — 3 docs PR-y per scenariusz (A V2 / B V2+V3 / C V2+V3)
+4. Krok 4 (TODO) — Rozdział 4 (Wykonanie eksperymentu)
+5. Krok 5 (TODO) — Rozdział 5 (Analiza i dyskusja)
+6. Krok 6 (TODO) — wstęp + zakończenie
 
 ## Wskazówki dla nowej sesji rozpoczynającej fazę 2
 

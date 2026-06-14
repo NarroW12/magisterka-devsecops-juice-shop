@@ -92,3 +92,67 @@ Z perspektywy hipotezy szczegółowej **H3** dotyczącej wpływu na czas budowan
 - **5 raportów SARIF** w `data/raw/scenario-a/run-1..5/`.
 - **5 zamkniętych pull requestów** w historii repozytorium GitHub (#14, #15, #16, #17, #18) z dołączonymi komentarzami bota `github-advanced-security` raportującymi inline znalezione sekrety.
 - **Tablica Code Scanning** zachowała alerty z każdego z pięciu przebiegów (filtr `pr:N`).
+
+## Wariant 2 — GitHub Personal Access Token
+
+**Cel:** rozszerzenie walidacji detektora Gitleaks na **inną klasę reguł** niż AWS (CICD-SEC-6 nadal, ale inny typ poświadczenia). Wykonano w fazie 2 eksperymentu (2026-06-13).
+
+### Konfiguracja
+
+W pliku `apps/flask-app/.env.example` (utworzonym wyłącznie na potrzeby wariantu) umieszczany jest fałszywy GitHub Personal Access Token o syntaktycznie poprawnym formacie `ghp_[A-Za-z0-9]{36}`. Token nie jest powiązany z żadnym realnym kontem GitHub.
+
+```dotenv
+GITHUB_TOKEN=ghp_aBcDeF1234567890abcdef1234567890abcd
+```
+
+### Procedura
+
+Analogicznie do wariantu 1, z konwencją nazewnictwa fazy 2:
+
+```bash
+bash scripts/scenario_a_variant_2_start.sh <N>
+# (ręcznie: zrzuty ekranu zapisane w docs/screenshots/scenario-a/variant-2/run-<N>/)
+bash scripts/scenario_a_variant_2_finish.sh <N>
+```
+
+Skrypt fazy 2 dodatkowo **auto-kopiuje** screen `01-precommit-blocked.png` z `run-1` do kolejnych runów (output pre-commit hook'a deterministyczny dla identycznego payloadu — oszczędza ręcznej pracy bez utraty informacji).
+
+### Wyniki trzech powtórzeń
+
+Wariant wykonano 13 czerwca 2026 roku, trzy niezależne przebiegi (redukcja z 5 do 3 powtórzeń per wariant zgodnie z decyzją metodologiczną — 3 runy nadal dowodzą determinizmu).
+
+| Run | PR | Workflow run | Pre-commit hook | Etap 1 CI | Findings | TP/FP | Czas Etap 1 |
+|-----|----|--------------|-----------------|-----------|----------|-------|-------------|
+| 1 | [#40](https://github.com/NarroW12/magisterka-devsecops-juice-shop/pull/40) | 27467015953 | ✓ zablokował | ✓ zablokował | 1 | 1/0 | ~20 s |
+| 2 | [#41](https://github.com/NarroW12/magisterka-devsecops-juice-shop/pull/41) | 27467445571 | ✓ zablokował | ✓ zablokował | 1 | 1/0 | ~20 s |
+| 3 | [#42](https://github.com/NarroW12/magisterka-devsecops-juice-shop/pull/42) | 27467597644 | ✓ zablokował | ✓ zablokował | 1 | 1/0 | ~20 s |
+
+### Wykryta reguła Gitleaks
+
+W każdym z trzech przebiegów zarejestrowano dokładnie ten sam pojedynczy finding:
+
+| Rule ID | Lokalizacja | Typ sekretu |
+|---------|-------------|-------------|
+| `github-pat` (reguła domyślna Gitleaks) | `apps/flask-app/.env.example:8` | GitHub Personal Access Token |
+
+W odróżnieniu od wariantu 1 (gdzie AWS triggerował 3 reguły — domyślną + 2 customowe `experiment-*`), wariant 2 opiera się **wyłącznie na domyślnej regule** `github-pat` Gitleaks. Nie dodano custom rule, ponieważ:
+
+1. Reguła domyślna jest stabilna i utrzymywana przez upstream
+2. Cel wariantu: walidacja rozszerzalności narzędzia na inny typ sekretu, nie wzmocnienie tego samego patternu różnymi regułami
+
+**Decyzja metodologiczna**: 1 finding × 3 runy z **100% determinizmem** w identycznej lokalizacji potwierdza H1 dla nowej klasy payloadu.
+
+### Zebrane artefakty dowodowe (wariant 2)
+
+- **12 zrzutów ekranu** (3 powtórzenia × 4 kategorie: pre-commit terminal — skopiowany z run-1, strona PR, Security tab, log workflow) w `docs/screenshots/scenario-a/variant-2/run-1..3/`.
+- **3 raporty SARIF** w `data/raw/scenario-a/variant-2/run-1..3/`.
+- **3 zamknięte pull requesty**: #40, #41, #42.
+
+### Konsolidacja wyników wariantów 1 i 2
+
+| Wariant | Payload | Reguły Gitleaks | Findings/run | Determinizm | Runs |
+|---------|---------|-----------------|--------------|-------------|------|
+| 1 | AWS Access Key + Secret | 3 (1 default + 2 custom) | 3 | 100% (5/5) | 5 |
+| 2 | GitHub Personal Access Token | 1 (default) | 1 | 100% (3/3) | 3 |
+
+Cross-variantowa weryfikacja H1: detekcja sekretów wykrywa **100% celowo wprowadzonych podatności w każdym z 8 niezależnych przebiegów na dwóch ortogonalnych klasach poświadczeń**.

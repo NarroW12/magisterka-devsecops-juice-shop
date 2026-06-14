@@ -26,6 +26,8 @@ paths = [
     # Skrypty automatyzujące scenariusze A/B/C/D zawierają literalne
     # przykładowe klucze AWS/payloady — są celowo wpisane w treść skryptu
     # jako część eksperymentu, nie są prawdziwymi sekretami.
-    '''scripts/scenario_._start\.sh''',
-    '''scripts/scenario_._finish\.sh''',
+    # Wzorzec obejmuje obie konwencje: fazy 1 (scenario_a_start.sh) i fazy 2
+    # (scenario_a_variant_2_start.sh).
+    '''scripts/scenario_.*_start\.sh''',
+    '''scripts/scenario_.*_finish\.sh''',
 ]
