@@ -17,55 +17,71 @@ Wykonane eksperymenty: **20 runów łącznie** (4 scenariusze × 5 powtórzeń j
 
 ## Cel drugiej fazy
 
-Po każdym scenariuszu (A, B, C, D) — dodanie nowych wariantów z różnymi typami podatności/konfiguracji. Każdy wariant po **5 runów** (zgodnie z konwencją pierwszej fazy).
+Po każdym scenariuszu (A, B, C, D) — dodanie nowych wariantów z różnymi typami podatności/konfiguracji.
 
-**Symetria 2 warianty per scenariusz złamana świadomie w scenariuszu D** — uzasadnienie w sekcji „Rozstrzygnięcia metodologiczne" niżej.
+**Stan finalny po wykonaniu fazy 2:**
 
-**Łącznie do wykonania:** 3 × 2 + 1 × 1 = 7 wariantów × 5 runów = **35 nowych runów**.
+| Scenariusz | Wariant 2 | Wariant 3 | Łącznie |
+|------------|-----------|-----------|---------|
+| A | ✅ 3 runy | — pominięty | 3 runy |
+| B | ✅ 3 runy | ✅ 3 runy (kontrola negatywna) | 6 runów |
+| C | ✅ 3 runy | ✅ 3 runy | 6 runów |
+| D | — pominięty | — pominięty | 0 runów |
+| **Razem** | — | — | **15 runów** |
+
+**Decyzje skalujące:** w trakcie fazy 2 zredukowano docelowy liczbę runów per wariant z 5 do **3** (po pytaniu metodologicznym użytkownika 2026-06-13). Trzy runy nadal dowodzą determinizmu, oszczędzając ~40% czasu CI. Plus: świadome pominięcia wariantów A V3, D V2, D V3 (uzasadnienia w opisach scenariuszy).
+
+**Wraz z fazą 1 (20 runów)** — łącznie **35 runów** w eksperymencie.
 
 ## Plan szczegółowy — warianty per scenariusz
 
 ### Scenariusz A — wyciek sekretów
 
-| Wariant | Typ sekretu | Konkretny payload | Plik | Spodziewana Gitleaks rule |
-|---------|------------|--------------------|------|---------------------------|
-| 1 | AWS Access Key ID | `AKIAIOSFODNN7EXAMPLE` + secret | `apps/flask-app/config.py` | `aws-access-token`, `experiment-aws-access-key-id` |
-| **2 (TODO)** | **GitHub Personal Access Token** | `ghp_aBcDeF1234567890abcdef1234567890abcd` (40 znaków po `ghp_`) | `apps/flask-app/.env.example` | `github-pat`, `github-fine-grained-pat` |
-| **3 (TODO)** | **Klucz prywatny RSA** | `-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA...\n-----END RSA PRIVATE KEY-----` (przykładowy, nieaktywny) | `apps/flask-app/keys/id_rsa.example` | `private-key` |
+| Wariant | Typ sekretu | Konkretny payload | Plik | Gitleaks rule | Status |
+|---------|------------|--------------------|------|---------------|--------|
+| 1 | AWS Access Key ID | `AKIAIOSFODNN7EXAMPLE` + secret | `apps/flask-app/config.py` | `aws-access-token`, `experiment-aws-access-key-id`, `experiment-aws-secret-access-key` (3 findings) | ✅ 5/5 (faza 1) |
+| 2 | GitHub Personal Access Token | `ghp_aBcDeF1234567890abcdef1234567890abcd` | `apps/flask-app/.env.example` | `github-pat` (1 finding — brak custom rule) | ✅ 3/3 (faza 2) |
+| ~~3~~ | ~~Klucz prywatny RSA~~ | — | — | — | **POMINIĘTY** |
 
-Wariant 2 i 3 testują różne klasy reguł Gitleaks (oprócz AWS) — szersza walidacja detektora.
+**Wariant 3 (RSA) pominięty świadomie** — V1 (AWS, 3 reguły) + V2 (GitHub PAT, 1 reguła default) już testują 2 ortogonalne klasy detektora Gitleaks. Trzecia klasa (RSA private key) byłaby redundantna względem demonstracji H1.
 
 ### Scenariusz B — podatna biblioteka
 
-| Wariant | Biblioteka + wersja | CVE | CVSS | Klasa | Oczekiwany wynik bramki |
-|---------|---------------------|-----|------|-------|--------------------------|
-| 1 | PyYAML 5.3.1 | CVE-2020-14343 | 9.8 CRITICAL | Improper Input Validation (RCE) | **BLOCK** |
-| 2 | **Pillow 8.0.0** | CVE-2021-25287 | 9.1 CRITICAL | Out-of-bounds read (libtiff) | **BLOCK** — inny typ błędu niż V1 |
-| 3 | **gunicorn 20.0.0** | CVE-2024-1135 | 7.5 HIGH | HTTP Request Smuggling | **PASS** — kontrola negatywna |
+| Wariant | Biblioteka + wersja | CVE | CVSS | Klasa | Wynik bramki | Status |
+|---------|---------------------|-----|------|-------|--------------|--------|
+| 1 | PyYAML 5.3.1 | CVE-2020-14343 | 9.8 CRITICAL | Improper Input Validation (RCE deserializacyjne) | **BLOCK** | ✅ 5/5 (faza 1) |
+| 2 | **paramiko 2.4.0** | CVE-2018-7750 | 9.8 CRITICAL | SSH pre-auth bypass / RCE | **BLOCK** | ✅ 3/3 (faza 2) |
+| 3 | **gunicorn 20.0.0** | CVE-2024-1135 | 7.5 HIGH (Trivy podaje 8.2) | HTTP Request Smuggling | **PASS** (kontrola negatywna) | ✅ 3/3 (faza 2) |
 
-V3 to **świadoma kontrola negatywna**: bramka jest skonfigurowana na próg CRITICAL (`failOnCVSS 9`), więc finding HIGH 7.5 powinien być wykryty i raportowany, ale **nie zablokować** PR. To krytyczny element narracji H2 — udowadnia że bramka respektuje politykę severity zamiast zawsze padać.
+**Substytucja Pillow → paramiko (V2)**: pierwotnie planowano Pillow 8.0.0, ale brak wheels dla Python 3.12 + brak `libjpeg-dev` na runnerze powodował fail Etap 2 (CodeQL `pip install`) zamiast Etap 3 (SCA). paramiko 2.4.0 jest pure Python — czysty test SCA gate'a.
+
+**V3 to świadoma kontrola negatywna**: bramka skonfigurowana na próg CRITICAL (`failOnCVSS 9`), więc finding HIGH 7.5 jest wykryty i raportowany, ale **nie blokuje** PR. Krytyczny element narracji H2 — udowadnia że bramka respektuje politykę severity zamiast zawsze padać.
+
+**Asymetria narzędzi (B V3 obserwacja)**: Trivy wykrył 3 CVE w gunicorn 20.0.0 (CVE-2024-1135, CVE-2024-6827, CVE-2026-27205), Dep-Check 0 findings dla tego pakietu. Sugeruje że Dep-Check ma słabsze pokrycie ekosystemu Python — wartościowy materiał dla rozdz. 5 (argument za defense-in-depth).
 
 ### Scenariusz C — Dockerfile
 
-| Wariant | Charakterystyka | Wykrycia oczekiwane |
-|---------|-----------------|---------------------|
-| 1 | 4 błędy razem (latest + brak USER + brak HEALTHCHECK + apt-get bez pin) | Hadolint DL3007 + Checkov CKV_DOCKER_2/3/7 + Trivy image CVE |
-| **2 (TODO)** | **Tylko brak USER** (reszta poprawna: pin tag, HEALTHCHECK, pin apt) | Checkov CKV_DOCKER_3 (izolowany — pokazuje że konkretna reguła sama wystarczy) |
-| **3 (TODO)** | **`ADD` zamiast `COPY` + `curl \| bash` anti-pattern** | Hadolint DL3020 (ADD over COPY) + DL3008 + Checkov |
+| Wariant | Charakterystyka | Wykrycia | Status |
+|---------|-----------------|----------|--------|
+| 1 | 4 błędy razem (latest + brak USER + brak HEALTHCHECK + apt-get bez pin) | Hadolint DL3007 + Checkov CKV_DOCKER_2/3/7 + Trivy image CVE | ✅ 5/5 (faza 1) |
+| 2 | **Tylko brak USER** (reszta poprawna) | **1 finding**: Checkov CKV_DOCKER_3 (pure izolacja) | ✅ 3/3 (faza 2) |
+| 3 | **Brak HEALTHCHECK + ADD zamiast COPY** | **5 findings**: Checkov CKV_DOCKER_2 + 2×CKV_DOCKER_4 (ADD), Hadolint 2×DL3020 (ADD) | ✅ 3/3 (faza 2) |
 
-Wariant 2 testuje pojedynczy konkretny błąd — sprawdza ziarnistość bramki. Wariant 3 testuje inny zestaw reguł (ADD/curl).
+**Korekta planu V3** — pierwotnie planowano DL3008 (apt-get bez pin), ale to reguła `IGNORED` w `configs/.hadolint.yaml`. Zastąpione brakiem HEALTHCHECK + ADD, co daje 5 findings rozłożone na 2 narzędzia (Checkov CKV_DOCKER_4 dla ADD oraz Hadolint DL3020 dla ADD — **defense-in-depth** w działaniu).
+
+V2 testuje **ziarnistość** (1 reguła, 1 finding, bramka blokuje). V3 testuje **cross-tool redundancję** (2 narzędzia niezależnie detektują ten sam pattern ADD).
 
 ### Scenariusz D — DAST
 
-Aplikacja Juice Shop jest deterministyczna i nie wymaga modyfikacji kodu. Warianty dotyczą **konfiguracji skanu ZAP**:
+| Wariant | Konfiguracja ZAP | Co testuje | Status |
+|---------|------------------|------------|--------|
+| 1 | `zap-full-scan` bez autentykacji | publiczne endpointy Juice Shop | ✅ 5/5 (faza 1) — 16 alertów × 5 runów (100% determinizm) |
+| ~~2~~ | ~~Authenticated scan~~ | endpointy autoryzowane | **POMINIĘTY** |
+| ~~3~~ | ~~Aggressive AJAX + fuzzing~~ | głębsze ścieżki | **POMINIĘTY** |
 
-| Wariant | Konfiguracja ZAP | Co dodatkowo testuje |
-|---------|------------------|----------------------|
-| 1 | `zap-full-scan` bez autentykacji | publiczne endpointy Juice Shop |
-| 2 | **Authenticated scan** (login `admin@juice-sh.op:admin123`) — wymaga konfiguracji ZAP context | endpointy autoryzowane (zwiększona pojemność detekcji) |
-| ~~3~~ | ~~Scan z dłuższym AJAX spider + fuzzing~~ | **POMINIĘTY** — uzasadnienie poniżej |
+**Wariant 2 (authenticated) pominięty** — pierwotnie planowane, ale w trakcie fazy 2 podjęto decyzję pragmatyczną: implementacja autoryzowanego skanu ZAP wymagała modyfikacji workflow YAML (pre-auth login + JWT injection do ZAP replacer config), co przy korzyściach marginalnych względem już udowodnionej tezy H4 (V1: 16 alertów × 5 runów, 100% determinizm) nie miało dobrego ROI. Decyzja opisana w rozdz. 4 jako świadome ograniczenie.
 
-**Wariant 3 pominięty świadomie.** Dodatkowy fuzzing i agresywny AJAX spider (`-T 30 -m 10`) wprowadziłby ryzyko niedeterminizmu czasowego (timeouty zależne od load), co byłoby kontrproduktywne wobec głównej tezy o powtarzalności pipeline'u. Oszczędność: 5 runów × ~15 min = **~75 min CI**. Konsekwencja: asymetryczna liczba wariantów per scenariusz (7 zamiast 8 łącznie) — opisywana w rozdz. 4 jako decyzja metodologiczna.
+**Wariant 3 (aggressive AJAX) pominięty** — agresywny AJAX spider (`-T 30 -m 10`) wprowadziłby ryzyko niedeterminizmu czasowego, sprzeczne z główną tezą o powtarzalności.
 
 ## Konwencja nazewnictwa
 
@@ -78,19 +94,20 @@ Dla zachowania spójności z pierwszą fazą:
 
 Alternatywnie można rozszerzyć istniejące skrypty o argument `--variant <N>` — zalecane dla DRY, ale wymaga większego refaktoru.
 
-## Estymacja czasu
+## Faktyczny czas wykonania fazy 2
 
-| Scenariusz | Czas pojedynczego runa | Warianty × runs | Czas CI |
-|------------|------------------------|------------------|---------|
-| A | ~25 s | 2 × 5 = 10 | ~5 min |
-| B | ~2 min 30 s | 2 × 5 = 10 | ~25 min |
-| C | ~4 min 40 s | 2 × 5 = 10 | ~47 min |
-| D | ~15 min | 1 × 5 = 5 | ~1 h 15 min |
-| **Razem** | — | **35 runów** | **~2 h 32 min czystego CI** |
+Eksperyment fazy 2 wykonany 2026-06-13 w jednej sesji ~4 h.
 
-Plus narzut na screeny (35 × 4 = **140 zrzutów ekranu** × ~30 s = ~70 min ręcznej pracy).
+| Scenariusz | Czas pojedynczego runa | Warianty × runs | Czas CI łączny |
+|------------|------------------------|------------------|----------------|
+| A | ~25 s (blok Etap 1) | 1 × 3 = 3 | ~75 s |
+| B V2 | ~2 min (blok Etap 3) | 1 × 3 = 3 | ~6 min |
+| B V3 | ~14 min (pełny pipeline — kontrola negatywna) | 1 × 3 = 3 | ~42 min |
+| C V2 | ~5 min (blok Etap 4) | 1 × 3 = 3 | ~15 min |
+| C V3 | ~5 min (blok Etap 4) | 1 × 3 = 3 | ~15 min |
+| **Razem** | — | **15 runów** | **~80 min CI** |
 
-**Total: ~4-5 h pracy w jednej sesji** lub rozłożone na 2-3 sesje.
+Screeny: 15 × 4 = **60 zrzutów ekranu** (run-1 wariantu A i runs ≥ 2 ze auto-copy 01).
 
 ## Krok zerowy w nowej sesji
 
